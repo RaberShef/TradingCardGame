@@ -1,9 +1,9 @@
 package com.berksefkatli.tcg;
 
-import com.berksefkatli.tcg.Game.CannotPlayCardNotInHandException;
-import com.berksefkatli.tcg.Game.NonExistentPlayerException;
-import com.berksefkatli.tcg.Game.NotEnoughPlayersException;
-import com.berksefkatli.tcg.Game.UniquePlayerException;
+import com.berksefkatli.tcg.exception.TcgException.CannotPlayCardNotInHandException;
+import com.berksefkatli.tcg.exception.TcgException.NonExistentPlayerException;
+import com.berksefkatli.tcg.exception.TcgException.NotEnoughPlayersException;
+import com.berksefkatli.tcg.exception.TcgException.UniquePlayerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +30,7 @@ public class TcgTests {
     public void when_addingNewPlayer_expect_newPlayerName() {
         String stringBuilder = "1" + System.lineSeparator() +
                 "Rahmi" + System.lineSeparator() +
-                "quit" + System.lineSeparator();
+                "4" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
         System.setIn(in);
 
@@ -46,7 +46,7 @@ public class TcgTests {
                 "Rahmi" + System.lineSeparator() +
                 "1" + System.lineSeparator() +
                 "Rahmi" + System.lineSeparator() +
-                "quit" + System.lineSeparator();
+                "4" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
         System.setIn(in);
 
@@ -63,7 +63,7 @@ public class TcgTests {
                 "Berk" + System.lineSeparator() +
                 "2" + System.lineSeparator() +
                 "Rahmi" + System.lineSeparator() +
-                "quit" + System.lineSeparator();
+                "4" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
         System.setIn(in);
 
@@ -77,7 +77,7 @@ public class TcgTests {
     public void when_removingNonExistentPlayer_expect_nonExistentPlayerError() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "NonExistentPlayer" + System.lineSeparator() +
-                "quit" + System.lineSeparator();
+                "4" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
         System.setIn(in);
 
@@ -91,7 +91,7 @@ public class TcgTests {
         String stringBuilder = "1" + System.lineSeparator() +
                 "Rahmi" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
-                "quit" + System.lineSeparator();
+                "4" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
         System.setIn(in);
 
@@ -105,7 +105,7 @@ public class TcgTests {
         String stringBuilder = "invalidChoice" + System.lineSeparator() +
                 "1" + System.lineSeparator() +
                 "Rahmi" + System.lineSeparator() +
-                "quit" + System.lineSeparator();
+                "4" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
         System.setIn(in);
 

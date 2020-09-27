@@ -1,4 +1,4 @@
-package com.berksefkatli.tcg;
+package com.berksefkatli.tcg.model;
 
 import java.util.Objects;
 

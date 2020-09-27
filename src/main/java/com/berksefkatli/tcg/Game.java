@@ -1,83 +1,58 @@
 package com.berksefkatli.tcg;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import com.berksefkatli.tcg.exception.TcgException.*;
+import com.berksefkatli.tcg.model.Card;
+import com.berksefkatli.tcg.model.Config;
+import com.berksefkatli.tcg.model.Player;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Game {
-    private static final int STARTING_PLAYER_HEALTH = 30;
-    private static final int STARTING_PLAYER_MANA = 0;
-    private static final int STARTING_PLAYER_MANA_SLOT = 0;
-    private static final int STARTING_PLAYER_HAND_SIZE = 3;
 
-    private final List<Card> startingDeck;
+    private final Config config;
     private final List<Player> players;
     private int activePlayerIndex;
     private boolean gameStarted;
     private boolean gameEnded;
 
     public Game() {
+        this.config = new Config();
         this.players = new ArrayList<>();
-        this.gameStarted = false;
-        this.gameEnded = false;
-        this.startingDeck = getDefaultDeck();
     }
 
-    public Game(List<Card> customDeck) {
+    public Game(Config config) {
+        this.config = config;
         this.players = new ArrayList<>();
-        this.gameStarted = false;
-        this.gameEnded = false;
-        this.startingDeck = customDeck;
-    }
-
-    public static List<Card> getDefaultDeck() {
-        List<Card> cards = new ArrayList<>();
-        cards.add(new Card(0));
-        cards.add(new Card(0));
-        cards.add(new Card(1));
-        cards.add(new Card(1));
-        cards.add(new Card(2));
-        cards.add(new Card(2));
-        cards.add(new Card(2));
-        cards.add(new Card(3));
-        cards.add(new Card(3));
-        cards.add(new Card(3));
-        cards.add(new Card(3));
-        cards.add(new Card(4));
-        cards.add(new Card(4));
-        cards.add(new Card(4));
-        cards.add(new Card(5));
-        cards.add(new Card(5));
-        cards.add(new Card(6));
-        cards.add(new Card(6));
-        cards.add(new Card(7));
-        cards.add(new Card(8));
-        return cards;
     }
 
     public void addPlayer(Player newPlayer) {
-        checkGameNotStarted();
-        checkUniquePlayer(newPlayer);
+        validateGameNotStarted();
+        validatePlayerNotExists(newPlayer);
         players.add(newPlayer);
     }
 
-    private void checkUniquePlayer(Player newPlayer) {
+    private void validatePlayerNotExists(Player newPlayer) {
         if (players.stream().anyMatch(player -> player.equals(newPlayer))) {
             throw new UniquePlayerException();
         }
     }
 
-    public void removePlayer(Player playerToBeRemoved) {
-        checkGameNotStarted();
-        if (!players.remove(playerToBeRemoved)) {
-            throw new NonExistentPlayerException();
+    private void validateGameNotStarted() {
+        if (gameStarted) {
+            throw new CannotChangePlayersAfterGameStartException();
         }
     }
 
-    private void checkGameNotStarted() {
-        if (gameStarted) {
-            throw new CannotChangePlayersAfterGameStartException();
+    public void removePlayer(Player playerToBeRemoved) {
+        validateGameNotStarted();
+        validatePlayerExists(playerToBeRemoved);
+        players.remove(playerToBeRemoved);
+    }
+
+    private void validatePlayerExists(Player playerToBeRemoved) {
+        if (players.stream().noneMatch(player -> player.equals(playerToBeRemoved))) {
+            throw new NonExistentPlayerException();
         }
     }
 
@@ -85,45 +60,83 @@ public class Game {
         if (players.size() < 2) {
             throw new NotEnoughPlayersException();
         }
-
-        players.forEach(player -> player.initialize(
-                STARTING_PLAYER_HEALTH,
-                STARTING_PLAYER_MANA,
-                STARTING_PLAYER_MANA_SLOT,
-                STARTING_PLAYER_HAND_SIZE,
-                startingDeck
-        ));
-
+        initializePlayers();
         activePlayerIndex = new Random().nextInt(players.size());
         gameStarted = true;
-        advanceTurn();
-        advanceTurnsUntilPlayable();
+        advanceToNextPlayer();
     }
 
-    private void advanceTurn() {
+    public void initializePlayers() {
+        players.forEach(player -> {
+            player.setHealth(config.getInitialPlayerHealth());
+            player.setManaSlot(config.getInitialPlayerManaSlot());
+            player.setHand(new ArrayList<>());
+            player.setDeck(getShuffledDeck(config.getStartingDeck()));
+            for (int i = 0; i < config.getInitialPlayerHandSize(); i++) {
+                player.getHand().add(player.getDeck().pop());
+            }
+        });
+    }
+
+    private Stack<Card> getShuffledDeck(List<Card> startingDeck) {
+        Stack<Card> shuffledDeck = new Stack<>();
+        List<Card> deck = new ArrayList<>(startingDeck);
+        Collections.shuffle(deck);
+        shuffledDeck.addAll(deck);
+        return shuffledDeck;
+    }
+
+    private void advanceToNextPlayer() {
         activePlayerIndex = (activePlayerIndex + 1) % players.size();
         Player activePlayer = getActivePlayer();
         activePlayer.increaseManaSlots();
-        activePlayer.draw();
-        if (activePlayer.getHealth() <= 0) {
-            activePlayerIndex = (activePlayerIndex + 1) % players.size();
-            Player newActivePlayer = getActivePlayer();
-            players.remove(activePlayer);
-            activePlayerIndex = players.indexOf(newActivePlayer);
-            System.out.println(activePlayer.getName() + " has lost!");
-            decideTheWinner();
+        draw(activePlayer);
+        if (activePlayer.isDead()) {
+            // Death from bleeding out
+            removeDeadPlayer(activePlayer);
+            if (isLastOneStanding()) {
+                return;
+            }
+            advanceToNextPlayer();
+        } else {
+            advanceToNextPlayerIfNoPlayableCards();
         }
     }
 
-    private void advanceTurnsUntilPlayable() {
-        // Automatic turn skipping
-        if (gameStarted && !gameEnded) {
-            while (getActivePlayer().getPlayableCards().isEmpty()) {
-                System.out.println("No playable cards exist. Auto skipping " + getActivePlayer().getName() + "'s turn.");
-                advanceTurn();
+    private void advanceToNextPlayerIfNoPlayableCards() {
+        if (getActivePlayer().getPlayableCards().isEmpty()) {
+            System.out.println("No playable cards exist. Auto skipping " + getActivePlayer().getName() + "'s turn.");
+            advanceToNextPlayer();
+        } else {
+            printGameState();
+        }
+    }
+
+    private void removeDeadPlayer(Player deadPlayer) {
+        Player activePlayer = getActivePlayer();
+        if (deadPlayer.equals(activePlayer)) {
+            Player previousPlayer = players.get((activePlayerIndex + players.size() - 1) % players.size());
+            players.remove(deadPlayer);
+            activePlayerIndex = players.indexOf(previousPlayer);
+        } else {
+            players.remove(deadPlayer);
+            activePlayerIndex = players.indexOf(activePlayer);
+        }
+        System.out.println(deadPlayer.getName() + " has lost!");
+    }
+
+    public void draw(Player player) {
+        if (player.getDeck().isEmpty()) {
+            System.out.println(player.getName() + " is bleeding out!");
+            player.setHealth(player.getHealth() - config.getBleedingOutDamage());
+        } else {
+            Card drawnCard = player.getDeck().pop();
+            if (player.getHand().size() == config.getMaxHandSize()) {
+                System.out.println(player.getName() + " is overloaded!");
+            } else {
+                player.getHand().add(drawnCard);
             }
         }
-        printGameState();
     }
 
     public void playCard(Card card) {
@@ -131,24 +144,21 @@ public class Game {
         System.out.println(getActivePlayer().getName() + " played a card with " + card.getCost() + " cost");
         getActivePlayer().setMana(getActivePlayer().getMana() - card.getCost());
         getActivePlayer().getHand().remove(card);
-        removeDeadPlayers(dealDamage(card));
-        advanceTurnsUntilPlayable();
+        List<Player> deadPlayers = dealDamage(card);
+        deadPlayers.forEach(this::removeDeadPlayer);
+        if (isLastOneStanding()) {
+            return;
+        }
+        advanceToNextPlayerIfNoPlayableCards();
     }
 
-    private void removeDeadPlayers(List<Player> deadPlayers) {
-        deadPlayers.forEach(deadPlayer -> {
-            Player activePlayer = getActivePlayer();
-            players.remove(deadPlayer);
-            activePlayerIndex = players.indexOf(activePlayer);
-            System.out.println(deadPlayer.getName() + " has lost!");
-            decideTheWinner();
-        });
-    }
-
-    private void decideTheWinner() {
-        if (players.size() == 1) {
-            gameEnded = true;
-            System.out.println(players.get(0).getName() + " has won!");
+    private void validatePlay(Card card) {
+        validateGameLive();
+        if (!getActivePlayer().getHand().contains(card)) {
+            throw new CannotPlayCardNotInHandException();
+        }
+        if (getActivePlayer().getMana() < card.getCost()) {
+            throw new NotEnoughManaException();
         }
     }
 
@@ -168,26 +178,26 @@ public class Game {
         return deadPlayers;
     }
 
-    private void validatePlay(Card card) {
-        if (!gameStarted) {
-            throw new GameNotStartedException();
+    private boolean isLastOneStanding() {
+        if (players.size() == 1) {
+            gameEnded = true;
+            System.out.println(players.get(0).getName() + " has won!");
+            return true;
         }
-        if (gameEnded) {
-            throw new GameEndedException();
-        }
-        if (!getActivePlayer().getHand().contains(card)) {
-            throw new CannotPlayCardNotInHandException();
-        }
-        if (getActivePlayer().getMana() < card.getCost()) {
-            throw new NotEnoughManaException();
+        return false;
+    }
+
+    private void validateGameLive() {
+        if (!isGameLive()) {
+            throw new GameNotLiveException();
         }
     }
 
     public void endTurn() {
         // Change active player to next player.
+        validateGameLive();
         System.out.println(getActivePlayer().getName() + "'s turn ended");
-        advanceTurn();
-        advanceTurnsUntilPlayable();
+        advanceToNextPlayer();
     }
 
     private void printGameState() {
@@ -197,7 +207,7 @@ public class Game {
                 System.out.println("Name: " + player.getName()
                         + ", Health: " + player.getHealth()
                         + ", Mana: " + player.getMana()
-                        + ", ManaSlots: " + player.getManaSlots()
+                        + ", ManaSlots: " + player.getManaSlot()
                         + ", CardsInHand: " + player.getHand().size()));
         System.out.println("===============================================================");
         System.out.println("Active player: " + getActivePlayer().getName());
@@ -215,75 +225,15 @@ public class Game {
         return players.get(activePlayerIndex);
     }
 
-    public boolean isGameNotEnded() {
-        return !gameEnded;
+    public Config getConfig() {
+        return config;
+    }
+
+    public boolean isGameLive() {
+        return gameStarted && !gameEnded;
     }
 
     public boolean isGameStarted() {
         return gameStarted;
-    }
-
-    public static class UniquePlayerException extends RuntimeException {
-        public static final String message = "Players in a game must be unique";
-
-        public UniquePlayerException() {
-            super(message);
-        }
-    }
-
-    public static class NonExistentPlayerException extends RuntimeException {
-        public static final String message = "The player does not exist.";
-
-        public NonExistentPlayerException() {
-            super(message);
-        }
-    }
-
-    public static class CannotChangePlayersAfterGameStartException extends RuntimeException {
-        public static final String message = "Players cannot be changed after the preparation phase";
-
-        public CannotChangePlayersAfterGameStartException() {
-            super(message);
-        }
-    }
-
-    public static class NotEnoughPlayersException extends RuntimeException {
-        public static final String message = "The game cannot be started unless there are at least two players.";
-
-        public NotEnoughPlayersException() {
-            super(message);
-        }
-    }
-
-    public static class CannotPlayCardNotInHandException extends RuntimeException {
-        public static final String message = "Only the cards in hand can be played.";
-
-        public CannotPlayCardNotInHandException() {
-            super(message);
-        }
-    }
-
-    public static class NotEnoughManaException extends RuntimeException {
-        public static final String message = "Player does not have enough mana to play requested card.";
-
-        public NotEnoughManaException() {
-            super(message);
-        }
-    }
-
-    public static class GameEndedException extends RuntimeException {
-        public static final String message = "No more plays can be made since the game has ended.";
-
-        public GameEndedException() {
-            super(message);
-        }
-    }
-
-    public static class GameNotStartedException extends RuntimeException {
-        public static final String message = "Plays can't be made since the game has not started yet.";
-
-        public GameNotStartedException() {
-            super(message);
-        }
     }
 }

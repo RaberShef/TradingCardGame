@@ -1,5 +1,9 @@
 package com.berksefkatli.tcg;
 
+import com.berksefkatli.tcg.exception.TcgException;
+import com.berksefkatli.tcg.model.Card;
+import com.berksefkatli.tcg.model.Player;
+
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -18,25 +22,24 @@ public class Tcg {
             try {
                 switch (menuChoice) {
                     case "1":
-                        System.out.println("Enter player name");
+                        System.out.println("Enter a player name for the new player");
                         playerName = in.nextLine();
                         game.addPlayer(new Player(playerName));
                         break;
                     case "2":
-                        System.out.println("Enter player name");
+                        System.out.println("Enter the player name of the player to be removed");
                         playerName = in.nextLine();
                         game.removePlayer(new Player(playerName));
                         break;
                     case "3":
-                        game.start();
                         gameplayLoop(in, game);
                         break;
-                    case "quit":
+                    case "4":
                         return;
                     default:
                         System.err.println("Please enter a valid option.");
                 }
-            } catch (RuntimeException e) {
+            } catch (TcgException e) {
                 System.err.println(e.getMessage());
             }
         }
@@ -48,11 +51,12 @@ public class Tcg {
         System.out.println("1) Add player");
         System.out.println("2) Remove player");
         System.out.println("3) Start game");
-        System.out.println("quit) Quit game");
+        System.out.println("4) Quit game");
     }
 
     private static void gameplayLoop(Scanner in, Game game) {
-        while (game.isGameNotEnded()) {
+        game.start();
+        while (game.isGameLive()) {
             String choice = in.nextLine();
             if (choice.equals("end")) {
                 game.endTurn();
@@ -64,7 +68,7 @@ public class Tcg {
                     game.playCard(new Card(cost));
                 } catch (NumberFormatException e) {
                     System.err.println("Please enter a valid integer, 'end' or 'quit'");
-                } catch (RuntimeException e) {
+                } catch (TcgException e) {
                     System.err.println(e.getMessage());
                 }
             }

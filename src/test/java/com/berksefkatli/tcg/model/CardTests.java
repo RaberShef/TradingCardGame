@@ -1,4 +1,4 @@
-package com.berksefkatli.tcg;
+package com.berksefkatli.tcg.model;
 
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +22,24 @@ public class CardTests {
     public void when_hashCode_expect_hashOfName() {
         Card card = new Card(3);
         assertEquals(Objects.hash(card.getCost()), card.hashCode());
+    }
+
+    @Test
+    public void when_negativeCost_expect_successful() {
+        Card card = new Card(-3);
+        assertEquals(-3, card.getCost());
+    }
+
+    @Test
+    public void when_positiveCost_expect_successful() {
+        Card card = new Card(3);
+        assertEquals(3, card.getCost());
+    }
+
+    @Test
+    public void when_zeroCost_expect_successful() {
+        Card card = new Card(0);
+        assertEquals(0, card.getCost());
     }
 
 }

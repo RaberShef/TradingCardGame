@@ -1,6 +1,9 @@
 package com.berksefkatli.tcg;
 
-import com.berksefkatli.tcg.Game.*;
+import com.berksefkatli.tcg.exception.TcgException.*;
+import com.berksefkatli.tcg.model.Card;
+import com.berksefkatli.tcg.model.Config;
+import com.berksefkatli.tcg.model.Player;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -13,11 +16,9 @@ public class GameTests {
     @Test
     public void when_addPlayer_expect_increaseInPlayerSize() {
         Game game = new Game();
+        assertEquals(0, game.getPlayers().size());
         game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        assertEquals(2, game.getPlayers().size());
-        game.addPlayer(new Player("Sefkatli"));
-        assertEquals(3, game.getPlayers().size());
+        assertEquals(1, game.getPlayers().size());
     }
 
     @Test
@@ -42,8 +43,6 @@ public class GameTests {
     public void when_removeNonExistentPlayer_throw_nonExistentPlayerException() {
         assertThrows(NonExistentPlayerException.class, () -> {
             Game game = new Game();
-            game.addPlayer(new Player("Berk"));
-            game.addPlayer(new Player("Rahmi"));
             game.removePlayer(new Player("Sefkatli"));
         });
     }
@@ -52,32 +51,28 @@ public class GameTests {
     public void when_removeExistentPlayer_expect_reductionInPlayerSize() {
         Game game = new Game();
         game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        assertEquals(2, game.getPlayers().size());
-        game.removePlayer(new Player("Berk"));
         assertEquals(1, game.getPlayers().size());
+        game.removePlayer(new Player("Rahmi"));
+        assertEquals(0, game.getPlayers().size());
     }
 
     @Test
     public void when_atGameStart_expect_correctInitialization() {
-        Game game = new Game(getDeckWithSameCostCards(0));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(0);
+        Config config = game.getConfig();
         game.getPlayers().forEach(player -> {
             if (player.equals(game.getActivePlayer())) {
-                assertEquals(1, player.getManaSlots());
-                assertEquals(1, player.getMana());
-                assertEquals(4, player.getHand().size());
-                assertEquals(16, player.getDeckSize());
+                assertEquals(config.getInitialPlayerManaSlot() + 1, player.getManaSlot());
+                assertEquals(config.getInitialPlayerManaSlot() + 1, player.getMana());
+                assertEquals(config.getInitialPlayerHandSize() + 1, player.getHand().size());
+                assertEquals(config.getStartingDeck().size() - config.getInitialPlayerHandSize() - 1, player.getDeck().size());
             } else {
-                assertEquals(0, player.getManaSlots());
+                assertEquals(config.getInitialPlayerManaSlot(), player.getManaSlot());
                 assertEquals(0, player.getMana());
-                assertEquals(3, player.getHand().size());
-                assertEquals(17, player.getDeckSize());
+                assertEquals(config.getInitialPlayerHandSize(), player.getHand().size());
+                assertEquals(config.getStartingDeck().size() - config.getInitialPlayerHandSize(), player.getDeck().size());
             }
-            assertEquals(30, player.getHealth());
+            assertEquals(config.getInitialPlayerHealth(), player.getHealth());
         });
     }
 
@@ -105,42 +100,30 @@ public class GameTests {
 
     @Test
     public void when_startTurn_expect_increasedManaAndManaSlots() {
-        Game game = new Game(getDeckWithSameCostCards(0));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(0);
 
         assertEquals(1, game.getActivePlayer().getMana());
-        assertEquals(1, game.getActivePlayer().getManaSlots());
+        assertEquals(1, game.getActivePlayer().getManaSlot());
 
         skipRound(game, 1);
 
         assertEquals(2, game.getActivePlayer().getMana());
-        assertEquals(2, game.getActivePlayer().getManaSlots());
+        assertEquals(2, game.getActivePlayer().getManaSlot());
     }
 
     @Test
     public void when_startTurn_expect_manaAndManaSlotsNoMoreThan10() {
-        Game game = new Game(getDeckWithSameCostCards(0));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(0);
 
         skipRound(game, 12);
 
         assertEquals(10, game.getActivePlayer().getMana());
-        assertEquals(10, game.getActivePlayer().getManaSlots());
+        assertEquals(10, game.getActivePlayer().getManaSlot());
     }
 
     @Test
     public void when_startTurn_expect_drawFromDeck() {
-        Game game = new Game(getDeckWithSameCostCards(0));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(0);
 
         assertEquals(4, game.getActivePlayer().getHand().size());
 
@@ -151,11 +134,7 @@ public class GameTests {
 
     @Test
     public void when_startTurnWithFullHand_expect_overload() {
-        Game game = new Game(getDeckWithSameCostCards(0));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(0);
 
         assertEquals(4, game.getActivePlayer().getHand().size());
         skipRound(game, 1);
@@ -166,11 +145,7 @@ public class GameTests {
 
     @Test
     public void when_noPlayableCard_expect_autoSkipTurn() {
-        Game game = new Game(getDeckWithSameCostCards(1));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(1);
 
         Player firstPlayer = game.getActivePlayer();
 
@@ -184,11 +159,7 @@ public class GameTests {
 
     @Test
     public void when_noPlayableCard_expect_autoSkipTurnMultiple() {
-        Game game = new Game(getDeckWithSameCostCards(4));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(4);
 
         // Since there are only 4 cost cards in the decks,
         // each player should automatically skip until they have 4 mana.
@@ -198,11 +169,7 @@ public class GameTests {
     @Test
     public void when_playCardNotInHand_throw_CannotPlayCardNotInHandException() {
         assertThrows(CannotPlayCardNotInHandException.class, () -> {
-            Game game = new Game(getDeckWithSameCostCards(1));
-            game.addPlayer(new Player("Rahmi"));
-            game.addPlayer(new Player("Berk"));
-            game.addPlayer(new Player("Sefkatli"));
-            game.start();
+            Game game = startNewTestGame(1);
             game.playCard(new Card(9));
         });
     }
@@ -210,11 +177,7 @@ public class GameTests {
     @Test
     public void when_playCardWithCostHigherThanMana_throw_NotEnoughManaException() {
         assertThrows(NotEnoughManaException.class, () -> {
-            Game game = new Game(getDeckWithSameCostCards(1));
-            game.addPlayer(new Player("Rahmi"));
-            game.addPlayer(new Player("Berk"));
-            game.addPlayer(new Player("Sefkatli"));
-            game.start();
+            Game game = startNewTestGame(1);
             // This is cheating :)
             game.getActivePlayer().getHand().add(new Card(20));
             game.playCard(new Card(20));
@@ -223,7 +186,7 @@ public class GameTests {
 
     @Test
     public void when_playCardBeforeStart_throw_GameNotStartedException() {
-        assertThrows(GameNotStartedException.class, () -> {
+        assertThrows(GameNotLiveException.class, () -> {
             Game game = new Game();
             game.addPlayer(new Player("Rahmi"));
             game.addPlayer(new Player("Berk"));
@@ -233,8 +196,8 @@ public class GameTests {
     }
 
     @Test
-    public void when_playCardWithCostHigherThanMana_throw_GameEndedException() {
-        assertThrows(GameEndedException.class, () -> {
+    public void when_playCardAfterGameEnded_throw_GameNotLiveException() {
+        assertThrows(GameNotLiveException.class, () -> {
             Game game = new Game();
             game.addPlayer(new Player("Rahmi"));
             game.addPlayer(new Player("Berk"));
@@ -242,7 +205,7 @@ public class GameTests {
             game.start();
 
             // Use bleeding out effect to end the game.
-            while (game.isGameNotEnded()) {
+            while (game.isGameLive()) {
                 skipRound(game, 1);
             }
 
@@ -252,11 +215,7 @@ public class GameTests {
 
     @Test
     public void when_playerHealthLessThan0AfterReceivingDamage_expect_playerToLose() {
-        Game game = new Game(getDeckWithSameCostCards(1));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(1);
 
         Player firstPlayer = game.getActivePlayer();
         // Use bleeding out effect to leave starting player with 1 health and all other players with 2 health.
@@ -281,11 +240,7 @@ public class GameTests {
 
     @Test
     public void when_playerHealthEqualTo0AfterReceivingDamage_expect_playerToLose() {
-        Game game = new Game(getDeckWithSameCostCards(1));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(1);
 
         Player firstPlayer = game.getActivePlayer();
         // Use bleeding out effect to leave starting player with 1 health and all other players with 2 health.
@@ -317,7 +272,7 @@ public class GameTests {
         game.start();
 
         // Skip rounds until there are no more cards in the deck
-        while (game.getActivePlayer().getDeckSize() > 0) {
+        while (game.getActivePlayer().getDeck().size() > 0) {
             skipRound(game, 1);
         }
         assertEquals(30, game.getActivePlayer().getHealth());
@@ -328,11 +283,7 @@ public class GameTests {
 
     @Test
     public void when_playCard_expect_doDamage_reduceMana_discardCard() {
-        Game game = new Game(getDeckWithSameCostCards(1));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(1);
 
         Player firstPlayer = game.getActivePlayer();
         int initialMana = firstPlayer.getMana();
@@ -354,11 +305,7 @@ public class GameTests {
 
     @Test
     public void when_playDudCard_expect_discardCard() {
-        Game game = new Game(getDeckWithSameCostCards(0));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(0);
 
         Player firstPlayer = game.getActivePlayer();
         int initialMana = firstPlayer.getMana();
@@ -380,50 +327,51 @@ public class GameTests {
 
     @Test
     public void when_startTurn_expect_manaToRefill() {
-        Game game = new Game(getDeckWithSameCostCards(1));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(1);
 
         skipRound(game, 1);
 
         assertEquals(2, game.getActivePlayer().getMana());
-        assertEquals(2, game.getActivePlayer().getManaSlots());
+        assertEquals(2, game.getActivePlayer().getManaSlot());
 
         game.playCard(new Card(1));
 
         assertEquals(1, game.getActivePlayer().getMana());
-        assertEquals(2, game.getActivePlayer().getManaSlots());
+        assertEquals(2, game.getActivePlayer().getManaSlot());
 
         skipRound(game, 1);
 
         assertEquals(3, game.getActivePlayer().getMana());
-        assertEquals(3, game.getActivePlayer().getManaSlots());
+        assertEquals(3, game.getActivePlayer().getManaSlot());
     }
 
     @Test
     public void when_startTurnWithMaxManaSlots_expect_manaToRefill() {
-        Game game = new Game(getDeckWithSameCostCards(1));
-        game.addPlayer(new Player("Rahmi"));
-        game.addPlayer(new Player("Berk"));
-        game.addPlayer(new Player("Sefkatli"));
-        game.start();
+        Game game = startNewTestGame(1);
 
         skipRound(game, 12);
 
         assertEquals(10, game.getActivePlayer().getMana());
-        assertEquals(10, game.getActivePlayer().getManaSlots());
+        assertEquals(10, game.getActivePlayer().getManaSlot());
 
         game.playCard(new Card(1));
 
         assertEquals(9, game.getActivePlayer().getMana());
-        assertEquals(10, game.getActivePlayer().getManaSlots());
+        assertEquals(10, game.getActivePlayer().getManaSlot());
 
         skipRound(game, 1);
 
         assertEquals(10, game.getActivePlayer().getMana());
-        assertEquals(10, game.getActivePlayer().getManaSlots());
+        assertEquals(10, game.getActivePlayer().getManaSlot());
+    }
+
+    private Game startNewTestGame(int allCardCosts) {
+        Game game = new Game(getConfigWithAllSameCostDeck(allCardCosts));
+        game.addPlayer(new Player("Rahmi"));
+        game.addPlayer(new Player("Berk"));
+        game.addPlayer(new Player("Sefkatli"));
+        game.start();
+        return game;
     }
 
     private void skipRound(Game game, int times) {
@@ -435,15 +383,17 @@ public class GameTests {
         }
     }
 
-    private List<Card> getDeckWithSameCostCards(int cost) {
+    private Config getConfigWithAllSameCostDeck(int cost) {
         // Supplying an all zero or one deck as the starting deck of a game guarantees that
         // every player will have playable cards on their turn.
         // This effectively disables automatic turn skipping feature as long as players keep one card in hand.
+        Config config = new Config();
         List<Card> customDeck = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             customDeck.add(new Card(cost));
         }
-        return customDeck;
+        config.setStartingDeck(customDeck);
+        return config;
     }
 
 }

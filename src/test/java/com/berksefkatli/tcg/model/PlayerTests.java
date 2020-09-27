@@ -1,5 +1,6 @@
-package com.berksefkatli.tcg;
+package com.berksefkatli.tcg.model;
 
+import com.berksefkatli.tcg.exception.TcgException.InvalidNameException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
@@ -10,17 +11,17 @@ public class PlayerTests {
 
     @Test
     public void when_playerNameIsNull_throw_invalidNameException() {
-        assertThrows(Player.InvalidNameException.class, () -> new Player(null));
+        assertThrows(InvalidNameException.class, () -> new Player(null));
     }
 
     @Test
     public void when_playerNameIsEmpty_throw_invalidNameException() {
-        assertThrows(Player.InvalidNameException.class, () -> new Player(""));
+        assertThrows(InvalidNameException.class, () -> new Player(""));
     }
 
     @Test
     public void when_playerNameIsEmptySpace_throw_invalidNameException() {
-        assertThrows(Player.InvalidNameException.class, () -> new Player(" "));
+        assertThrows(InvalidNameException.class, () -> new Player(" "));
     }
 
     @Test
