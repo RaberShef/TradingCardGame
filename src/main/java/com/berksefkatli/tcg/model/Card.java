@@ -2,7 +2,7 @@ package com.berksefkatli.tcg.model;
 
 import java.util.Objects;
 
-public class Card {
+public class Card implements Comparable<Card> {
     private final int cost;
 
     public Card(int cost) {
@@ -26,4 +26,8 @@ public class Card {
         return Objects.hash(cost);
     }
 
+    @Override
+    public int compareTo(Card other) {
+        return Integer.compare(this.getCost(), other.getCost());
+    }
 }

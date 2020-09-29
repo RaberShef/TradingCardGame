@@ -11,7 +11,7 @@ public class PlayerTests {
 
     @Test
     public void when_playerNameIsNull_throw_invalidNameException() {
-        assertThrows(InvalidNameException.class, () -> new Player(null));
+        assertThrows(InvalidNameException.class, () -> new Player((String) null));
     }
 
     @Test

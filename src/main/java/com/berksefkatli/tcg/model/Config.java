@@ -1,15 +1,48 @@
 package com.berksefkatli.tcg.model;
 
+import com.berksefkatli.tcg.exception.TcgException.InvalidConfigurationException;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Config {
+
+    private Set<Player> players = getDefaultPlayers();
+    private List<Card> deck = getDefaultDeck();
+    private int initialHealth = 30;
+    private int initialManaCapacity = 0;
+    private int initialHandSize = 3;
+    private int maxManaCapacity = 10;
     private int maxHandSize = 5;
-    private int bleedingOutDamage = 1;
-    private int initialPlayerHealth = 30;
-    private int initialPlayerManaSlot = 0;
-    private int initialPlayerHandSize = 3;
-    private List<Card> startingDeck = getDefaultDeck();
+    private int bleedingDamageAmount = 1;
+
+    public Set<Player> getPlayers() {
+        return players;
+    }
+
+    public void setPlayers(Set<Player> players) {
+        if (players.size() < 2) {
+            throw new InvalidConfigurationException("There cannot be less than 2 unique players");
+        }
+        this.players = players;
+    }
+
+    public List<Card> getDeck() {
+        return deck;
+    }
+
+    public void setDeck(List<Card> deck) {
+        if (deck.size() == 0) {
+            throw new InvalidConfigurationException("Deck must contain at least 1 card");
+        }
+        if (initialHandSize > deck.size()) {
+            throw new InvalidConfigurationException("Deck size cannot be less than the initial hand size");
+        }
+        this.deck = deck;
+    }
 
     private List<Card> getDefaultDeck() {
         List<Card> cards = new ArrayList<>();
@@ -36,6 +69,69 @@ public class Config {
         return cards;
     }
 
+    private Set<Player> getDefaultPlayers() {
+        Set<Player> players = new HashSet<>();
+        players.add(new Player("Player1"));
+        players.add(new Player("Player2"));
+        return players;
+    }
+
+    public int getInitialHealth() {
+        return initialHealth;
+    }
+
+    public void setInitialHealth(int initialHealth) {
+        if (initialHealth < 1) {
+            throw new InvalidConfigurationException("Initial health cannot be less than 1");
+        }
+        this.initialHealth = initialHealth;
+    }
+
+    public int getInitialManaCapacity() {
+        return initialManaCapacity;
+    }
+
+    public void setInitialManaCapacity(int initialManaCapacity) {
+        if (initialManaCapacity < 0) {
+            throw new InvalidConfigurationException("Initial mana capacity cannot be less than 0");
+        }
+        if (initialManaCapacity > maxManaCapacity) {
+            throw new InvalidConfigurationException(
+                    "Initial mana capacity cannot be greater than the max mana capacity");
+        }
+        this.initialManaCapacity = initialManaCapacity;
+    }
+
+    public int getInitialHandSize() {
+        return initialHandSize;
+    }
+
+    public void setInitialHandSize(int initialHandSize) {
+        if (initialHandSize < 0) {
+            throw new InvalidConfigurationException("Initial hand size cannot be less than 0");
+        }
+        if (initialHandSize > deck.size()) {
+            throw new InvalidConfigurationException(
+                    "Initial hand size cannot be greater than the number of cards in the initial deck");
+        }
+        this.initialHandSize = initialHandSize;
+    }
+
+    public int getMaxManaCapacity() {
+        return maxManaCapacity;
+    }
+
+    public void setMaxManaCapacity(int maxManaCapacity) {
+        if (maxManaCapacity < 1) {
+            throw new InvalidConfigurationException("Max mana capacity cannot be less than 1");
+        }
+        if (initialManaCapacity > maxManaCapacity) {
+            throw new InvalidConfigurationException(
+                    "Max mana capacity cannot be less than the initial mana capacity");
+        }
+        this.maxManaCapacity = maxManaCapacity;
+    }
+
     public int getMaxHandSize() {
         return maxHandSize;
     }
@@ -47,66 +143,28 @@ public class Config {
         this.maxHandSize = maxHandSize;
     }
 
-    public int getBleedingOutDamage() {
-        return bleedingOutDamage;
+    public int getBleedingDamageAmount() {
+        return bleedingDamageAmount;
     }
 
-    public void setBleedingOutDamage(int bleedingOutDamage) {
-        if (bleedingOutDamage < 0) {
-            throw new InvalidConfigurationException("Bleeding out damage cannot be less than 0");
+    public void setBleedingDamageAmount(int bleedingDamageAmount) {
+        if (bleedingDamageAmount < 0) {
+            throw new InvalidConfigurationException("Bleeding damage cannot be less than 0");
         }
-        this.bleedingOutDamage = bleedingOutDamage;
+        this.bleedingDamageAmount = bleedingDamageAmount;
     }
 
-    public int getInitialPlayerHealth() {
-        return initialPlayerHealth;
-    }
-
-    public void setInitialPlayerHealth(int initialPlayerHealth) {
-        if (initialPlayerHealth < 1) {
-            throw new InvalidConfigurationException("Initial player health cannot be less than 1");
-        }
-        this.initialPlayerHealth = initialPlayerHealth;
-    }
-
-    public int getInitialPlayerManaSlot() {
-        return initialPlayerManaSlot;
-    }
-
-    public void setInitialPlayerManaSlot(int initialPlayerManaSlot) {
-        if (initialPlayerManaSlot < 0) {
-            throw new InvalidConfigurationException("Initial player mana slots cannot be less than 0");
-        }
-        this.initialPlayerManaSlot = initialPlayerManaSlot;
-    }
-
-    public int getInitialPlayerHandSize() {
-        return initialPlayerHandSize;
-    }
-
-    public void setInitialPlayerHandSize(int initialPlayerHandSize) {
-        if (initialPlayerHandSize > startingDeck.size()) {
-            throw new InvalidConfigurationException(
-                    "Initial player hand size cannot be greater than the number of cards in the initial deck");
-        }
-        this.initialPlayerHandSize = initialPlayerHandSize;
-    }
-
-    public List<Card> getStartingDeck() {
-        return startingDeck;
-    }
-
-    public void setStartingDeck(List<Card> startingDeck) {
-        if (initialPlayerHandSize > startingDeck.size()) {
-            throw new InvalidConfigurationException(
-                    "Initial player hand size cannot be greater than the number of cards in the initial deck");
-        }
-        this.startingDeck = startingDeck;
-    }
-
-    public static class InvalidConfigurationException extends RuntimeException {
-        public InvalidConfigurationException(String message) {
-            super(message);
-        }
+    @Override
+    public String toString() {
+        return "Players: " + players.stream().map(Player::getName)
+                .collect(Collectors.joining(", ")) + System.lineSeparator() +
+                "Deck: " + deck.stream().map(card -> "" + card.getCost())
+                .collect(Collectors.joining(", ")) + System.lineSeparator() +
+                "Initial health: " + initialHealth + System.lineSeparator() +
+                "Initial mana capacity: " + initialManaCapacity + System.lineSeparator() +
+                "Initial hand size: " + initialHandSize + System.lineSeparator() +
+                "Max mana capacity: " + maxManaCapacity + System.lineSeparator() +
+                "Max hand size: " + maxHandSize + System.lineSeparator() +
+                "Bleeding damage amount: " + bleedingDamageAmount + System.lineSeparator();
     }
 }

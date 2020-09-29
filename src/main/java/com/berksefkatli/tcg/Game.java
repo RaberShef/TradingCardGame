@@ -1,10 +1,13 @@
 package com.berksefkatli.tcg;
 
-import com.berksefkatli.tcg.exception.TcgException.*;
+import com.berksefkatli.tcg.exception.TcgException.CannotPlayCardNotInHandException;
+import com.berksefkatli.tcg.exception.TcgException.GameNotLiveException;
+import com.berksefkatli.tcg.exception.TcgException.NotEnoughManaException;
 import com.berksefkatli.tcg.model.Card;
 import com.berksefkatli.tcg.model.Config;
 import com.berksefkatli.tcg.model.Player;
 
+import java.io.PrintStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -12,75 +15,39 @@ public class Game {
 
     private final Config config;
     private final List<Player> players;
+    private final PrintStream out;
     private int activePlayerIndex;
     private boolean gameStarted;
     private boolean gameEnded;
 
-    public Game() {
-        this.config = new Config();
-        this.players = new ArrayList<>();
-    }
-
-    public Game(Config config) {
+    public Game(PrintStream out, Config config) {
+        this.out = out;
         this.config = config;
-        this.players = new ArrayList<>();
+        this.players = config.getPlayers().stream().map(Player::new).collect(Collectors.toList());
+        start();
     }
 
-    public void addPlayer(Player newPlayer) {
-        validateGameNotStarted();
-        validatePlayerNotExists(newPlayer);
-        players.add(newPlayer);
-    }
-
-    private void validatePlayerNotExists(Player newPlayer) {
-        if (players.stream().anyMatch(player -> player.equals(newPlayer))) {
-            throw new UniquePlayerException();
-        }
-    }
-
-    private void validateGameNotStarted() {
-        if (gameStarted) {
-            throw new CannotChangePlayersAfterGameStartException();
-        }
-    }
-
-    public void removePlayer(Player playerToBeRemoved) {
-        validateGameNotStarted();
-        validatePlayerExists(playerToBeRemoved);
-        players.remove(playerToBeRemoved);
-    }
-
-    private void validatePlayerExists(Player playerToBeRemoved) {
-        if (players.stream().noneMatch(player -> player.equals(playerToBeRemoved))) {
-            throw new NonExistentPlayerException();
-        }
-    }
-
-    public void start() {
-        if (players.size() < 2) {
-            throw new NotEnoughPlayersException();
-        }
+    private void start() {
         initializePlayers();
         activePlayerIndex = new Random().nextInt(players.size());
         gameStarted = true;
         advanceToNextPlayer();
     }
 
-    public void initializePlayers() {
+    private void initializePlayers() {
         players.forEach(player -> {
-            player.setHealth(config.getInitialPlayerHealth());
-            player.setManaSlot(config.getInitialPlayerManaSlot());
+            player.setHealth(config.getInitialHealth());
+            player.setManaCapacity(config.getInitialManaCapacity());
             player.setHand(new ArrayList<>());
-            player.setDeck(getShuffledDeck(config.getStartingDeck()));
-            for (int i = 0; i < config.getInitialPlayerHandSize(); i++) {
+            player.setDeck(getShuffledDeck(config.getDeck()));
+            for (int i = 0; i < config.getInitialHandSize(); i++) {
                 player.getHand().add(player.getDeck().pop());
             }
         });
     }
 
-    private Stack<Card> getShuffledDeck(List<Card> startingDeck) {
+    private Stack<Card> getShuffledDeck(List<Card> deck) {
         Stack<Card> shuffledDeck = new Stack<>();
-        List<Card> deck = new ArrayList<>(startingDeck);
         Collections.shuffle(deck);
         shuffledDeck.addAll(deck);
         return shuffledDeck;
@@ -88,12 +55,34 @@ public class Game {
 
     private void advanceToNextPlayer() {
         activePlayerIndex = (activePlayerIndex + 1) % players.size();
+        initializeNextTurn();
+    }
+
+    private void initializeNextTurn() {
         Player activePlayer = getActivePlayer();
-        activePlayer.increaseManaSlots();
-        draw(activePlayer);
-        if (activePlayer.isDead()) {
-            // Death from bleeding out
-            removeDeadPlayer(activePlayer);
+        increaseManaCapacity(activePlayer);
+        tryToDrawFromDeck(activePlayer);
+    }
+
+    public void increaseManaCapacity(Player player) {
+        player.setManaCapacity(Math.min(player.getManaCapacity() + 1, config.getMaxManaCapacity()));
+        player.setMana(player.getManaCapacity());
+    }
+
+    public void tryToDrawFromDeck(Player player) {
+        if (player.getDeck().isEmpty()) {
+            bleedOut(player);
+        } else {
+            drawFromDeck(player);
+            advanceToNextPlayerIfNoPlayableCards();
+        }
+    }
+
+    private void bleedOut(Player player) {
+        out.println(player.getName() + " is bleeding out!");
+        player.setHealth(player.getHealth() - config.getBleedingDamageAmount());
+        if (player.isDead()) {
+            removeActiveDeadPlayer(player);
             if (isLastOneStanding()) {
                 return;
             }
@@ -103,49 +92,44 @@ public class Game {
         }
     }
 
+    private void drawFromDeck(Player player) {
+        Card drawnCard = player.getDeck().pop();
+        if (player.getHand().size() == config.getMaxHandSize()) {
+            out.println(player.getName() + " is overloaded!");
+        } else {
+            player.getHand().add(drawnCard);
+        }
+    }
+
     private void advanceToNextPlayerIfNoPlayableCards() {
         if (getActivePlayer().getPlayableCards().isEmpty()) {
-            System.out.println("No playable cards exist. Auto skipping " + getActivePlayer().getName() + "'s turn.");
+            out.println("No playable cards exist. Auto skipping " + getActivePlayer().getName() + "'s turn.");
             advanceToNextPlayer();
         } else {
             printGameState();
         }
     }
 
-    private void removeDeadPlayer(Player deadPlayer) {
-        Player activePlayer = getActivePlayer();
-        if (deadPlayer.equals(activePlayer)) {
-            Player previousPlayer = players.get((activePlayerIndex + players.size() - 1) % players.size());
-            players.remove(deadPlayer);
-            activePlayerIndex = players.indexOf(previousPlayer);
-        } else {
-            players.remove(deadPlayer);
-            activePlayerIndex = players.indexOf(activePlayer);
-        }
-        System.out.println(deadPlayer.getName() + " has lost!");
+    private void removeActiveDeadPlayer(Player deadPlayer) {
+        Player previousPlayer = players.get((activePlayerIndex + players.size() - 1) % players.size());
+        players.remove(deadPlayer);
+        activePlayerIndex = players.indexOf(previousPlayer);
+        out.println(deadPlayer.getName() + " has lost!");
     }
 
-    public void draw(Player player) {
-        if (player.getDeck().isEmpty()) {
-            System.out.println(player.getName() + " is bleeding out!");
-            player.setHealth(player.getHealth() - config.getBleedingOutDamage());
-        } else {
-            Card drawnCard = player.getDeck().pop();
-            if (player.getHand().size() == config.getMaxHandSize()) {
-                System.out.println(player.getName() + " is overloaded!");
-            } else {
-                player.getHand().add(drawnCard);
-            }
-        }
+    private void removeInactiveDeadPlayer(Player deadPlayer) {
+        Player activePlayer = getActivePlayer();
+        players.remove(deadPlayer);
+        activePlayerIndex = players.indexOf(activePlayer);
+        out.println(deadPlayer.getName() + " has lost!");
     }
 
     public void playCard(Card card) {
         validatePlay(card);
-        System.out.println(getActivePlayer().getName() + " played a card with " + card.getCost() + " cost");
+        out.println(getActivePlayer().getName() + " played a card with " + card.getCost() + " cost");
         getActivePlayer().setMana(getActivePlayer().getMana() - card.getCost());
         getActivePlayer().getHand().remove(card);
-        List<Player> deadPlayers = dealDamage(card);
-        deadPlayers.forEach(this::removeDeadPlayer);
+        dealDamage(card);
         if (isLastOneStanding()) {
             return;
         }
@@ -162,26 +146,26 @@ public class Game {
         }
     }
 
-    private List<Player> dealDamage(Card card) {
+    private void dealDamage(Card card) {
         List<Player> deadPlayers = new ArrayList<>();
         if (card.getCost() > 0) {
             players.forEach(player -> {
                 if (!player.equals(getActivePlayer())) {
                     player.setHealth(player.getHealth() - card.getCost());
-                    System.out.println(player.getName() + " took " + card.getCost() + " damage!");
-                    if (player.getHealth() <= 0) {
+                    out.println(player.getName() + " took " + card.getCost() + " damage!");
+                    if (player.isDead()) {
                         deadPlayers.add(player);
                     }
                 }
             });
+            deadPlayers.forEach(this::removeInactiveDeadPlayer);
         }
-        return deadPlayers;
     }
 
     private boolean isLastOneStanding() {
         if (players.size() == 1) {
             gameEnded = true;
-            System.out.println(players.get(0).getName() + " has won!");
+            out.println(players.get(0).getName() + " has won!");
             return true;
         }
         return false;
@@ -194,46 +178,39 @@ public class Game {
     }
 
     public void endTurn() {
-        // Change active player to next player.
         validateGameLive();
-        System.out.println(getActivePlayer().getName() + "'s turn ended");
+        out.println(getActivePlayer().getName() + "'s turn ended");
         advanceToNextPlayer();
     }
 
     private void printGameState() {
-        System.out.println("===============================================================");
-        System.out.println("Players: ");
-        getPlayers().forEach(player ->
-                System.out.println("Name: " + player.getName()
-                        + ", Health: " + player.getHealth()
-                        + ", Mana: " + player.getMana()
-                        + ", ManaSlots: " + player.getManaSlot()
-                        + ", CardsInHand: " + player.getHand().size()));
-        System.out.println("===============================================================");
-        System.out.println("Active player: " + getActivePlayer().getName());
-        System.out.println("Active player's hand: " + getActivePlayer().getHand()
+        out.println("===============================================================");
+        out.println("Players: ");
+        players.forEach(player -> out.println(player.toString()));
+        out.println("===============================================================");
+        out.println("Active player: " + getActivePlayer().getName());
+        out.println("Active player's hand: " + getActivePlayer().getHand()
                 .stream().map(Card::getCost).collect(Collectors.toList()));
-        System.out.println("Choose a card to play by entering its cost, " +
+        out.println("Choose a card to play by entering its cost, " +
                 "end your turn by entering 'end' or quit the game by entering 'quit': ");
     }
 
-    public List<Player> getPlayers() {
-        return players;
+    List<Player> getCopyOfPlayers() {
+        // Return a copy of player objects to make it read-only.
+        return players.stream().map(Player::new).collect(Collectors.toList());
     }
 
-    public Player getActivePlayer() {
+    Player getCopyOfActivePlayer() {
+        // Return a copy of player object to make it read-only.
+        return new Player(players.get(activePlayerIndex));
+    }
+
+    private Player getActivePlayer() {
         return players.get(activePlayerIndex);
-    }
-
-    public Config getConfig() {
-        return config;
     }
 
     public boolean isGameLive() {
         return gameStarted && !gameEnded;
     }
 
-    public boolean isGameStarted() {
-        return gameStarted;
-    }
 }

@@ -15,13 +15,22 @@ public class Player {
 
     private int health;
     private int mana;
-    private int manaSlot;
+    private int manaCapacity;
+
+    public Player(Player player) {
+        this.name = player.name;
+        this.hand = player.hand;
+        this.deck = player.deck;
+        this.health = player.health;
+        this.mana = player.mana;
+        this.manaCapacity = player.manaCapacity;
+    }
 
     public Player(String name) {
         if (name == null || name.trim().isEmpty()) {
             throw new InvalidNameException();
         }
-        this.name = name;
+        this.name = name.trim();
         this.deck = new Stack<>();
         this.hand = new ArrayList<>();
     }
@@ -42,17 +51,12 @@ public class Player {
         return health <= 0;
     }
 
-    public int getManaSlot() {
-        return manaSlot;
+    public int getManaCapacity() {
+        return manaCapacity;
     }
 
-    public void setManaSlot(int manaSlot) {
-        this.manaSlot = manaSlot;
-    }
-
-    public void increaseManaSlots() {
-        this.manaSlot = Math.min(manaSlot + 1, 10);
-        this.mana = manaSlot;
+    public void setManaCapacity(int manaCapacity) {
+        this.manaCapacity = manaCapacity;
     }
 
     public int getMana() {
@@ -94,5 +98,14 @@ public class Player {
     @Override
     public int hashCode() {
         return Objects.hash(name);
+    }
+
+    @Override
+    public String toString() {
+        return "Name: " + name +
+                ", Health: " + health +
+                ", Mana: " + mana +
+                ", Mana capacity: " + manaCapacity +
+                ", Cards in hand: " + hand.size();
     }
 }

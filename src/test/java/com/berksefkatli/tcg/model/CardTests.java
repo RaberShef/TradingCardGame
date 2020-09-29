@@ -42,4 +42,14 @@ public class CardTests {
         assertEquals(0, card.getCost());
     }
 
+    @Test
+    public void when_compareTo_expect_successful() {
+        Card card = new Card(0);
+        Card card2 = new Card(5);
+        Card card3 = new Card(5);
+        assertEquals(-1, card.compareTo(card2));
+        assertEquals(0, card2.compareTo(card3));
+        assertEquals(1, card3.compareTo(card));
+    }
+
 }
