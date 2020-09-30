@@ -3,7 +3,10 @@ package com.berksefkatli.tcg.model;
 import java.util.Objects;
 
 public class Card implements Comparable<Card> {
-    private final int cost;
+    private int cost;
+
+    public Card() {
+    }
 
     public Card(int cost) {
         this.cost = cost;

@@ -1,18 +1,22 @@
 package com.berksefkatli.tcg;
 
 import com.berksefkatli.tcg.exception.TcgException.CannotPlayCardNotInHandException;
+import com.berksefkatli.tcg.model.Config;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class UserInterfaceTests {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String TEST_CONFIG_FILE_PATH = "src/test/resources/testConfig.json";
+    private static final String CORRUPTED_TEST_CONFIG_FILE_PATH = "src/test/resources/testConfigCorrupted.json";
+    private static final String INVALID_TEST_CONFIG_FILE_PATH = "src/test/resources/testConfigInvalid.json";
 
     private ByteArrayOutputStream outContent;
     private ByteArrayOutputStream errContent;
@@ -20,7 +24,8 @@ public class UserInterfaceTests {
     private PrintStream err;
 
     @BeforeEach
-    public void setUpStreams() {
+    public void setUpStreams() throws IOException {
+        objectMapper.writeValue(new File(TEST_CONFIG_FILE_PATH), new Config());
         outContent = new ByteArrayOutputStream();
         errContent = new ByteArrayOutputStream();
         out = new PrintStream(outContent);
@@ -32,7 +37,7 @@ public class UserInterfaceTests {
         String stringBuilder = "invalidChoice" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().contains("Please enter a valid option."));
         assertTrue(outContent.toString().contains("Start game"));
@@ -46,7 +51,7 @@ public class UserInterfaceTests {
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().contains("Please enter a card's cost value, 'end' or 'quit'"));
     }
@@ -55,11 +60,11 @@ public class UserInterfaceTests {
     public void when_invalidChoiceInCustomizeConfigMenu_expect_showErrorAndRetry() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "invalidChoice" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().contains("Please enter a valid option."));
         assertTrue(outContent.toString().contains("Current game settings:"));
@@ -70,11 +75,11 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
                 "notAnInteger" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().contains("Please enter a valid integer"));
         assertTrue(outContent.toString().contains("Current game settings:"));
@@ -85,11 +90,11 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
                 "0" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().contains("Initial health cannot be less than 1"));
         assertTrue(outContent.toString().contains("Current game settings:"));
@@ -102,7 +107,7 @@ public class UserInterfaceTests {
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().isEmpty());
         assertTrue(outContent.toString().contains("Name: "));
@@ -122,7 +127,7 @@ public class UserInterfaceTests {
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().contains(CannotPlayCardNotInHandException.message));
     }
@@ -141,7 +146,7 @@ public class UserInterfaceTests {
 
         InputStream in = new ByteArrayInputStream(stringBuilder.toString().getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(outContent.toString().contains("'s turn ended"));
         assertTrue(outContent.toString().contains("has lost!"));
@@ -153,11 +158,11 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "1" + System.lineSeparator() +
                 "Rahmi, Berk" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().isEmpty());
         assertTrue(outContent.toString().contains("Players: Berk, Rahmi"));
@@ -168,11 +173,11 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "2" + System.lineSeparator() +
                 "0, 3, 2, 5, 6, 4, 7" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().isEmpty());
         assertTrue(outContent.toString().contains("Deck: 0, 2, 3, 4, 5, 6, 7"));
@@ -183,11 +188,11 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
                 "20" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().isEmpty());
         assertTrue(outContent.toString().contains("Initial health: 20"));
@@ -198,11 +203,11 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "4" + System.lineSeparator() +
                 "5" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().isEmpty());
         assertTrue(outContent.toString().contains("Initial mana capacity: 5"));
@@ -213,11 +218,11 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "5" + System.lineSeparator() +
                 "2" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().isEmpty());
         assertTrue(outContent.toString().contains("Initial hand size: 2"));
@@ -228,11 +233,11 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "6" + System.lineSeparator() +
                 "25" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().isEmpty());
         assertTrue(outContent.toString().contains("Max mana capacity: 25"));
@@ -243,11 +248,11 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "7" + System.lineSeparator() +
                 "2" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().isEmpty());
         assertTrue(outContent.toString().contains("Max hand size: 2"));
@@ -258,14 +263,80 @@ public class UserInterfaceTests {
         String stringBuilder = "2" + System.lineSeparator() +
                 "8" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
-                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
-        UserInterface.mainMenu(in, out, err);
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
         assertTrue(errContent.toString().isEmpty());
         assertTrue(outContent.toString().contains("Bleeding damage amount: 3"));
+    }
+
+    @Test
+    public void when_revertToDefaultConfig_expect_printDefaultConfig() {
+        String stringBuilder = "2" + System.lineSeparator() +
+                "8" + System.lineSeparator() +
+                "3" + System.lineSeparator() +
+                "9" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
+                "3" + System.lineSeparator();
+        InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
+
+        UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
+
+        Config updatedConfig = new Config();
+        updatedConfig.setBleedingDamageAmount(3);
+        int firstConfigIndex = outContent.toString().indexOf(new Config().toString());
+        int updatedConfigIndex = outContent.toString().substring(firstConfigIndex).indexOf(updatedConfig.toString());
+
+        assertTrue(errContent.toString().isEmpty());
+        assertTrue(outContent.toString().substring(updatedConfigIndex).contains(new Config().toString()));
+    }
+
+    @Test
+    public void when_corruptedConfig_expect_corruptedError() {
+        String stringBuilder = "3" + System.lineSeparator();
+        InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
+
+        UserInterface.mainMenu(CORRUPTED_TEST_CONFIG_FILE_PATH, in, out, err);
+
+        assertTrue(errContent.toString().contains("Previous configuration is corrupted, default configuration will be loaded instead."));
+    }
+
+    @Test
+    public void when_invalidConfig_expect_invalidError() {
+        String stringBuilder = "3" + System.lineSeparator();
+        InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
+
+        UserInterface.mainMenu(INVALID_TEST_CONFIG_FILE_PATH, in, out, err);
+
+        assertTrue(errContent.toString().contains("Initial health cannot be less than 1"));
+        assertTrue(errContent.toString().contains("Previous configuration could not be loaded for the reason above, default configuration will be loaded instead."));
+    }
+
+    @Test
+    public void when_cantReadConfig_expect_couldNotLoadError() {
+        String stringBuilder = "3" + System.lineSeparator();
+        InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
+
+        UserInterface.mainMenu("/nonExistentConfigPath", in, out, err);
+
+        assertTrue(errContent.toString().contains("Previous configuration could not be loaded, default configuration will be loaded instead."));
+    }
+
+    @Test
+    public void when_cantWriteConfig_expect_couldNotSaveError() {
+        String stringBuilder = "2" + System.lineSeparator() +
+                "8" + System.lineSeparator() +
+                "3" + System.lineSeparator() +
+                "10" + System.lineSeparator() +
+                "3" + System.lineSeparator();
+        InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
+
+        UserInterface.mainMenu("/nonExistentConfigPath", in, out, err);
+
+        assertTrue(errContent.toString().contains("Unable to save config to disk, your customizations might get lost on exit."));
     }
 
 }

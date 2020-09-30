@@ -4,16 +4,23 @@ import com.berksefkatli.tcg.exception.TcgException;
 import com.berksefkatli.tcg.model.Card;
 import com.berksefkatli.tcg.model.Config;
 import com.berksefkatli.tcg.model.Player;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.*;
 
 public class UserInterface {
 
-    public static void mainMenu(InputStream in, PrintStream out, PrintStream err) {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public static void mainMenu(String configPath, InputStream in, PrintStream out, PrintStream err) {
         Scanner scanner = new Scanner(in);
-        Config config = new Config();
+        Config config = getConfigFromFile(configPath, out, err);
         while (true) {
             printMainMenu(out);
             String menuChoice = scanner.nextLine();
@@ -22,7 +29,7 @@ public class UserInterface {
                     gameplay(scanner, err, new Game(out, config));
                     break;
                 case "2":
-                    customizeConfigMenu(scanner, out, err, config);
+                    customizeConfigMenu(configPath, scanner, out, err, config);
                     break;
                 case "3":
                     return;
@@ -30,6 +37,22 @@ public class UserInterface {
                     err.println("Please enter a valid option.");
             }
         }
+    }
+
+    private static Config getConfigFromFile(String configPath, PrintStream out, PrintStream err) {
+        Config config = new Config();
+        try {
+            config = objectMapper.readValue(new File(configPath), Config.class);
+            out.println("Configuration from the last game is loaded.");
+        } catch (JsonParseException e) {
+            err.println("Previous configuration is corrupted, default configuration will be loaded instead.");
+        } catch (JsonMappingException e) {
+            err.println(e.getMessage());
+            err.println("Previous configuration could not be loaded for the reason above, default configuration will be loaded instead.");
+        } catch (IOException e) {
+            err.println("Previous configuration could not be loaded, default configuration will be loaded instead.");
+        }
+        return config;
     }
 
     private static void printMainMenu(PrintStream out) {
@@ -61,7 +84,7 @@ public class UserInterface {
         }
     }
 
-    private static void customizeConfigMenu(Scanner scanner, PrintStream out, PrintStream err, Config config) {
+    private static void customizeConfigMenu(String configPath, Scanner scanner, PrintStream out, PrintStream err, Config config) {
         while (true) {
             printCustomConfigMenu(out, config);
             String menuChoice = scanner.nextLine();
@@ -92,14 +115,20 @@ public class UserInterface {
                         setBleedingDamageAmount(scanner, out, config);
                         break;
                     case "9":
+                        config = new Config();
+                        break;
+                    case "10":
                         return;
                     default:
                         err.println("Please enter a valid option.");
                 }
+                objectMapper.writeValue(new File(configPath), config);
             } catch (NumberFormatException e) {
                 err.println("Please enter a valid integer");
             } catch (TcgException e) {
                 err.println(e.getMessage());
+            } catch (IOException e) {
+                err.println("Unable to save config to disk, your customizations might get lost on exit.");
             }
         }
     }
@@ -175,6 +204,7 @@ public class UserInterface {
                 "6) Set max mana capacity" + System.lineSeparator() +
                 "7) Set max hand size" + System.lineSeparator() +
                 "8) Set bleeding damage amount" + System.lineSeparator() +
-                "9) Back to main menu");
+                "9) Revert to defaults" + System.lineSeparator() +
+                "10) Back to main menu");
     }
 }

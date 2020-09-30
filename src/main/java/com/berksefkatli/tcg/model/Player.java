@@ -1,6 +1,7 @@
 package com.berksefkatli.tcg.model;
 
 import com.berksefkatli.tcg.exception.TcgException.InvalidNameException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,13 +10,16 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 
 public class Player {
-    private final String name;
+    private String name;
     private List<Card> hand;
     private Stack<Card> deck;
 
     private int health;
     private int mana;
     private int manaCapacity;
+
+    public Player() {
+    }
 
     public Player(Player player) {
         this.name = player.name;
@@ -47,6 +51,7 @@ public class Player {
         this.health = health;
     }
 
+    @JsonIgnore
     public boolean isDead() {
         return health <= 0;
     }
