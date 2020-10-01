@@ -6,34 +6,34 @@ public class TcgException extends RuntimeException {
     }
 
     public static class CannotPlayCardNotInHandException extends TcgException {
-        public static final String message = "Only the cards in hand can be played.";
+        public static final String MESSAGE = "Only the cards in hand can be played.";
 
         public CannotPlayCardNotInHandException() {
-            super(message);
+            super(MESSAGE);
         }
     }
 
     public static class NotEnoughManaException extends TcgException {
-        public static final String message = "Player does not have enough mana to play requested card.";
+        public static final String MESSAGE = "Player does not have enough mana to play requested card.";
 
         public NotEnoughManaException() {
-            super(message);
+            super(MESSAGE);
         }
     }
 
     public static class GameNotLiveException extends TcgException {
-        public static final String message = "Plays can only be made while the game is live.";
+        public static final String MESSAGE = "Plays can only be made while the game is live.";
 
         public GameNotLiveException() {
-            super(message);
+            super(MESSAGE);
         }
     }
 
     public static class InvalidNameException extends TcgException {
-        public static final String message = "Player name cannot be empty or null";
+        public static final String MESSAGE = "Player name cannot be empty or null";
 
         public InvalidNameException() {
-            super(message);
+            super(MESSAGE);
         }
     }
 

@@ -46,11 +46,9 @@ public class Game {
         });
     }
 
-    private Stack<Card> getShuffledDeck(List<Card> deck) {
-        Stack<Card> shuffledDeck = new Stack<>();
+    private Deque<Card> getShuffledDeck(List<Card> deck) {
         Collections.shuffle(deck);
-        shuffledDeck.addAll(deck);
-        return shuffledDeck;
+        return new ArrayDeque<>(deck);
     }
 
     private void advanceToNextPlayer() {

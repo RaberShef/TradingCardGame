@@ -7,25 +7,25 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PlayerTests {
+class PlayerTests {
 
     @Test
-    public void when_playerNameIsNull_throw_invalidNameException() {
+    void when_playerNameIsNull_throw_invalidNameException() {
         assertThrows(InvalidNameException.class, () -> new Player((String) null));
     }
 
     @Test
-    public void when_playerNameIsEmpty_throw_invalidNameException() {
+    void when_playerNameIsEmpty_throw_invalidNameException() {
         assertThrows(InvalidNameException.class, () -> new Player(""));
     }
 
     @Test
-    public void when_playerNameIsEmptySpace_throw_invalidNameException() {
+    void when_playerNameIsEmptySpace_throw_invalidNameException() {
         assertThrows(InvalidNameException.class, () -> new Player(" "));
     }
 
     @Test
-    public void when_equals_expect_equalsOfName() {
+    void when_equals_expect_equalsOfName() {
         Player player = new Player("Berk");
         Player player2 = new Player("Berk");
         Player player3 = new Player("Rahmi");
@@ -34,7 +34,7 @@ public class PlayerTests {
     }
 
     @Test
-    public void when_hashCode_expect_hashOfName() {
+    void when_hashCode_expect_hashOfName() {
         Player player = new Player("Berk");
         assertEquals(Objects.hash(player.getName()), player.hashCode());
     }

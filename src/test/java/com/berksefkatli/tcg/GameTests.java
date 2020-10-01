@@ -15,10 +15,10 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class GameTests {
+class GameTests {
 
     @Test
-    public void when_atGameStart_expect_correctInitialization() {
+    void when_atGameStart_expect_correctInitialization() {
         Config config = getConfigWithAllSameCostDeck(0);
         Game game = new Game(System.out, config);
         game.getCopyOfPlayers().forEach(player -> {
@@ -38,7 +38,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_startTurn_expect_increasedManaAndManaCapacity() {
+    void when_startTurn_expect_increasedManaAndManaCapacity() {
         Game game = startNewTestGame(0);
 
         assertEquals(1, game.getCopyOfActivePlayer().getMana());
@@ -51,7 +51,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_startTurn_expect_manaAndManaCapacityNoMoreThan10() {
+    void when_startTurn_expect_manaAndManaCapacityNoMoreThan10() {
         Game game = startNewTestGame(0);
 
         skipRound(game, 12);
@@ -61,7 +61,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_startTurn_expect_drawFromDeck() {
+    void when_startTurn_expect_drawFromDeck() {
         Game game = startNewTestGame(0);
 
         assertEquals(4, game.getCopyOfActivePlayer().getHand().size());
@@ -72,7 +72,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_startTurnWithFullHand_expect_overload() {
+    void when_startTurnWithFullHand_expect_overload() {
         Game game = startNewTestGame(0);
 
         assertEquals(4, game.getCopyOfActivePlayer().getHand().size());
@@ -83,7 +83,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_noPlayableCard_expect_autoSkipTurn() {
+    void when_noPlayableCard_expect_autoSkipTurn() {
         Game game = startNewTestGame(1);
 
         Player firstPlayer = game.getCopyOfActivePlayer();
@@ -96,7 +96,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_noPlayableCard_expect_autoSkipTurnMultiple() {
+    void when_noPlayableCard_expect_autoSkipTurnMultiple() {
         Game game = startNewTestGame(4);
 
         // Since there are only 4 cost cards in the decks,
@@ -105,47 +105,45 @@ public class GameTests {
     }
 
     @Test
-    public void when_playCardNotInHand_throw_CannotPlayCardNotInHandException() {
-        assertThrows(CannotPlayCardNotInHandException.class, () -> {
-            Game game = startNewTestGame(1);
-            game.playCard(new Card(9));
-        });
+    void when_playCardNotInHand_throw_CannotPlayCardNotInHandException() {
+        Game game = startNewTestGame(1);
+        Card card = new Card(9);
+        assertThrows(CannotPlayCardNotInHandException.class, () -> game.playCard(card));
     }
 
     @Test
-    public void when_playCardWithCostHigherThanMana_throw_NotEnoughManaException() {
-        assertThrows(NotEnoughManaException.class, () -> {
-            // Make sure all players get one zero cost card to avoid auto skipping
-            // and one card with cost higher than their mana to be able to play it and cause the exception.
-            Config config = new Config();
-            config.setInitialHandSize(2);
-            config.setInitialManaCapacity(0);
-            List<Card> customDeck = new ArrayList<>();
-            customDeck.add(new Card(2));
-            customDeck.add(new Card(0));
-            config.setDeck(customDeck);
+    void when_playCardWithCostHigherThanMana_throw_NotEnoughManaException() {
+        // Make sure all players get one zero cost card to avoid auto skipping
+        // and one card with cost higher than their mana to be able to play it and cause the exception.
+        Config config = new Config();
+        config.setInitialHandSize(2);
+        config.setInitialManaCapacity(0);
+        List<Card> customDeck = new ArrayList<>();
+        customDeck.add(new Card(2));
+        customDeck.add(new Card(0));
+        config.setDeck(customDeck);
 
-            Game game = new Game(System.out, config);
-            game.playCard(new Card(2));
-        });
+        Game game = new Game(System.out, config);
+
+        Card card = new Card(2);
+        assertThrows(NotEnoughManaException.class, () -> game.playCard(card));
     }
 
     @Test
-    public void when_playCardAfterGameEnded_throw_GameNotLiveException() {
-        assertThrows(GameNotLiveException.class, () -> {
-            Game game = new Game(System.out, new Config());
+    void when_playCardAfterGameEnded_throw_GameNotLiveException() {
+        Game game = new Game(System.out, new Config());
 
-            // Use bleeding out effect to end the game.
-            while (game.isGameLive()) {
-                skipRound(game, 1);
-            }
+        // Use bleeding out effect to end the game.
+        while (game.isGameLive()) {
+            skipRound(game, 1);
+        }
 
-            game.playCard(new Card(1));
-        });
+        Card card = new Card(1);
+        assertThrows(GameNotLiveException.class, () -> game.playCard(card));
     }
 
     @Test
-    public void when_playerHealthLessThan0AfterReceivingDamage_expect_playerToLose() {
+    void when_playerHealthLessThan0AfterReceivingDamage_expect_playerToLose() {
         // Increase initial mana capacity to avoid auto skipping even with all 3 cost deck.
         Config config = getConfigWithAllSameCostDeck(3);
         config.setInitialManaCapacity(3);
@@ -171,7 +169,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_playerHealthEqualTo0AfterReceivingDamage_expect_playerToLose() {
+    void when_playerHealthEqualTo0AfterReceivingDamage_expect_playerToLose() {
         // Increase initial mana capacity to avoid auto skipping even with all 2 cost deck.
         Config config = getConfigWithAllSameCostDeck(2);
         config.setInitialManaCapacity(2);
@@ -198,7 +196,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_drawCardFromEmptyDeck_expect_bleedingDamage() {
+    void when_drawCardFromEmptyDeck_expect_bleedingDamage() {
         Game game = new Game(System.out, new Config());
 
         // Skip rounds until there are no more cards in the deck
@@ -212,7 +210,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_deathFromBleedingOut_expect_nextPlayerToDraw() {
+    void when_deathFromBleedingOut_expect_nextPlayerToDraw() {
         // Auto skip every turn
         Game game = startNewTestGame(20);
 
@@ -221,7 +219,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_playCard_expect_doDamage_reduceMana_discardCard() {
+    void when_playCard_expect_doDamage_reduceMana_discardCard() {
         Game game = startNewTestGame(1);
 
         Player firstPlayer = game.getCopyOfActivePlayer();
@@ -243,7 +241,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_playDudCard_expect_discardCard() {
+    void when_playDudCard_expect_discardCard() {
         Game game = startNewTestGame(0);
 
         Player firstPlayer = game.getCopyOfActivePlayer();
@@ -265,7 +263,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_startTurn_expect_manaToRefill() {
+    void when_startTurn_expect_manaToRefill() {
         Game game = startNewTestGame(1);
 
         skipRound(game, 1);
@@ -285,7 +283,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_startTurnWithMaxManaCapacity_expect_manaToRefill() {
+    void when_startTurnWithMaxManaCapacity_expect_manaToRefill() {
         Game game = startNewTestGame(1);
 
         skipRound(game, 12);
@@ -305,7 +303,7 @@ public class GameTests {
     }
 
     @Test
-    public void when_playerIsModified_expect_noChange() {
+    void when_playerIsModified_expect_noChange() {
         Game game = new Game(System.out, new Config());
         game.getCopyOfPlayers().get(0).setHealth(99);
         assertNotEquals(99, game.getCopyOfPlayers().get(0).getHealth());

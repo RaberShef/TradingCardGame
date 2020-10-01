@@ -3,16 +3,13 @@ package com.berksefkatli.tcg.model;
 import com.berksefkatli.tcg.exception.TcgException.InvalidNameException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Player {
     private String name;
     private List<Card> hand;
-    private Stack<Card> deck;
+    private Deque<Card> deck;
 
     private int health;
     private int mana;
@@ -35,7 +32,7 @@ public class Player {
             throw new InvalidNameException();
         }
         this.name = name.trim();
-        this.deck = new Stack<>();
+        this.deck = new ArrayDeque<>();
         this.hand = new ArrayList<>();
     }
 
@@ -72,11 +69,11 @@ public class Player {
         this.mana = mana;
     }
 
-    public Stack<Card> getDeck() {
+    public Deque<Card> getDeck() {
         return deck;
     }
 
-    public void setDeck(Stack<Card> deck) {
+    public void setDeck(Deque<Card> deck) {
         this.deck = deck;
     }
 

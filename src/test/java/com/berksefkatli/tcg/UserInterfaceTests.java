@@ -11,7 +11,7 @@ import java.io.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class UserInterfaceTests {
+class UserInterfaceTests {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String TEST_CONFIG_FILE_PATH = "src/test/resources/testConfig.json";
@@ -33,7 +33,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_invalidChoiceInMainMenu_expect_showErrorAndRetry() {
+    void when_invalidChoiceInMainMenu_expect_showErrorAndRetry() {
         String stringBuilder = "invalidChoice" + System.lineSeparator() +
                 "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
@@ -44,7 +44,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_invalidChoiceInGameplay_expect_showErrorAndRetry() {
+    void when_invalidChoiceInGameplay_expect_showErrorAndRetry() {
         String stringBuilder = "1" + System.lineSeparator() +
                 "invalidChoice" + System.lineSeparator() +
                 "quit" + System.lineSeparator() +
@@ -57,7 +57,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_invalidChoiceInCustomizeConfigMenu_expect_showErrorAndRetry() {
+    void when_invalidChoiceInCustomizeConfigMenu_expect_showErrorAndRetry() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "invalidChoice" + System.lineSeparator() +
                 "10" + System.lineSeparator() +
@@ -71,7 +71,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_invalidIntegerInCustomizeConfigMenu_expect_showErrorAndRetry() {
+    void when_invalidIntegerInCustomizeConfigMenu_expect_showErrorAndRetry() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
                 "notAnInteger" + System.lineSeparator() +
@@ -81,12 +81,12 @@ public class UserInterfaceTests {
 
         UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
-        assertTrue(errContent.toString().contains("Please enter a valid integer"));
+        assertTrue(errContent.toString().contains(UserInterface.INTEGER_PROMPT));
         assertTrue(outContent.toString().contains("Current game settings:"));
     }
 
     @Test
-    public void when_setHealthToLessThan1InCustomizeConfigMenu_expect_showErrorAndRetry() {
+    void when_setHealthToLessThan1InCustomizeConfigMenu_expect_showErrorAndRetry() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
                 "0" + System.lineSeparator() +
@@ -101,7 +101,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_gameStart_expect_printGameState() {
+    void when_gameStart_expect_printGameState() {
         String stringBuilder = "1" + System.lineSeparator() +
                 "quit" + System.lineSeparator() +
                 "3" + System.lineSeparator();
@@ -120,7 +120,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_playingCardNotInHand_expect_cardNotInHandError() {
+    void when_playingCardNotInHand_expect_cardNotInHandError() {
         String stringBuilder = "1" + System.lineSeparator() +
                 "20" + System.lineSeparator() +
                 "quit" + System.lineSeparator() +
@@ -129,11 +129,11 @@ public class UserInterfaceTests {
 
         UserInterface.mainMenu(TEST_CONFIG_FILE_PATH, in, out, err);
 
-        assertTrue(errContent.toString().contains(CannotPlayCardNotInHandException.message));
+        assertTrue(errContent.toString().contains(CannotPlayCardNotInHandException.MESSAGE));
     }
 
     @Test
-    public void when_skipEveryTurn_expect_bleedingOutVictory() {
+    void when_skipEveryTurn_expect_bleedingOutVictory() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("1").append(System.lineSeparator());
 
@@ -154,7 +154,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_setPlayers_expect_printPlayerNames() {
+    void when_setPlayers_expect_printPlayerNames() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "1" + System.lineSeparator() +
                 "Rahmi, Berk" + System.lineSeparator() +
@@ -169,7 +169,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_setDeck_expect_printDeck() {
+    void when_setDeck_expect_printDeck() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "2" + System.lineSeparator() +
                 "0, 3, 2, 5, 6, 4, 7" + System.lineSeparator() +
@@ -184,7 +184,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_setInitialHealth_expect_printInitialHealth() {
+    void when_setInitialHealth_expect_printInitialHealth() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
                 "20" + System.lineSeparator() +
@@ -199,7 +199,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_setInitialManaCapacity_expect_printInitialManaCapacity() {
+    void when_setInitialManaCapacity_expect_printInitialManaCapacity() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "4" + System.lineSeparator() +
                 "5" + System.lineSeparator() +
@@ -214,7 +214,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_setInitialHandSize_expect_printInitialHandSize() {
+    void when_setInitialHandSize_expect_printInitialHandSize() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "5" + System.lineSeparator() +
                 "2" + System.lineSeparator() +
@@ -229,7 +229,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_setMaxManaCapacity_expect_printMaxManaCapacity() {
+    void when_setMaxManaCapacity_expect_printMaxManaCapacity() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "6" + System.lineSeparator() +
                 "25" + System.lineSeparator() +
@@ -244,7 +244,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_setMaxHandSize_expect_printMaxHandSize() {
+    void when_setMaxHandSize_expect_printMaxHandSize() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "7" + System.lineSeparator() +
                 "2" + System.lineSeparator() +
@@ -259,7 +259,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_setBleedingDamageAmount_expect_printBleedingDamageAmount() {
+    void when_setBleedingDamageAmount_expect_printBleedingDamageAmount() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "8" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
@@ -274,7 +274,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_revertToDefaultConfig_expect_printDefaultConfig() {
+    void when_revertToDefaultConfig_expect_printDefaultConfig() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "8" + System.lineSeparator() +
                 "3" + System.lineSeparator() +
@@ -295,7 +295,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_corruptedConfig_expect_corruptedError() {
+    void when_corruptedConfig_expect_corruptedError() {
         String stringBuilder = "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
@@ -305,7 +305,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_invalidConfig_expect_invalidError() {
+    void when_invalidConfig_expect_invalidError() {
         String stringBuilder = "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
@@ -316,7 +316,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_cantReadConfig_expect_couldNotLoadError() {
+    void when_cantReadConfig_expect_couldNotLoadError() {
         String stringBuilder = "3" + System.lineSeparator();
         InputStream in = new ByteArrayInputStream(stringBuilder.getBytes());
 
@@ -326,7 +326,7 @@ public class UserInterfaceTests {
     }
 
     @Test
-    public void when_cantWriteConfig_expect_couldNotSaveError() {
+    void when_cantWriteConfig_expect_couldNotSaveError() {
         String stringBuilder = "2" + System.lineSeparator() +
                 "8" + System.lineSeparator() +
                 "3" + System.lineSeparator() +

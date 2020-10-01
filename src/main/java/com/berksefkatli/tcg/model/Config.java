@@ -35,7 +35,7 @@ public class Config {
     }
 
     public void setDeck(List<Card> deck) {
-        if (deck.size() == 0) {
+        if (deck.isEmpty()) {
             throw new InvalidConfigurationException("Deck must contain at least 1 card");
         }
         if (initialHandSize > deck.size()) {
@@ -70,10 +70,10 @@ public class Config {
     }
 
     private Set<Player> getDefaultPlayers() {
-        Set<Player> players = new HashSet<>();
-        players.add(new Player("Player1"));
-        players.add(new Player("Player2"));
-        return players;
+        Set<Player> defaultPlayers = new HashSet<>();
+        defaultPlayers.add(new Player("Player1"));
+        defaultPlayers.add(new Player("Player2"));
+        return defaultPlayers;
     }
 
     public int getInitialHealth() {

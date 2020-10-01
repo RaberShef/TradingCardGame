@@ -12,128 +12,95 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class ConfigTests {
+class ConfigTests {
 
     @Test
-    public void when_setInitialHandSizeLessThan0_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setInitialHandSize(-1);
-        });
+    void when_setInitialHandSizeLessThan0_throw_invalidConfigurationException() {
+        Config config = new Config();
+        assertThrows(InvalidConfigurationException.class, () -> config.setInitialHandSize(-1));
     }
 
     @Test
-    public void when_setDeckSizeLessThan1_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            List<Card> deck = new ArrayList<>();
-            config.setDeck(deck);
-        });
+    void when_setDeckSizeLessThan1_throw_invalidConfigurationException() {
+        Config config = new Config();
+        List<Card> deck = new ArrayList<>();
+        assertThrows(InvalidConfigurationException.class, () -> config.setDeck(deck));
     }
 
     @Test
-    public void when_setInitialHandSizeGreaterThanInitialDeckSize_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setInitialHandSize(21);
-        });
+    void when_setInitialHandSizeGreaterThanInitialDeckSize_throw_invalidConfigurationException() {
+        Config config = new Config();
+        assertThrows(InvalidConfigurationException.class, () -> config.setInitialHandSize(21));
 
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            List<Card> deck = new ArrayList<>();
-            deck.add(new Card(1));
-            deck.add(new Card(1));
-            config.setDeck(deck);
-        });
+        List<Card> deck = new ArrayList<>();
+        deck.add(new Card(1));
+        deck.add(new Card(1));
+        assertThrows(InvalidConfigurationException.class, () -> config.setDeck(deck));
     }
 
     @Test
-    public void when_setInitialHealthLessThan1_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setInitialHealth(0);
-        });
+    void when_setInitialHealthLessThan1_throw_invalidConfigurationException() {
+        Config config = new Config();
 
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setInitialHealth(-1);
-        });
+        assertThrows(InvalidConfigurationException.class, () -> config.setInitialHealth(0));
+
+        assertThrows(InvalidConfigurationException.class, () -> config.setInitialHealth(-1));
     }
 
     @Test
-    public void when_setMaxHandSizeLessThan1_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setMaxHandSize(0);
-        });
+    void when_setMaxHandSizeLessThan1_throw_invalidConfigurationException() {
+        Config config = new Config();
+        assertThrows(InvalidConfigurationException.class, () -> config.setMaxHandSize(0));
 
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setMaxHandSize(-1);
-        });
+        assertThrows(InvalidConfigurationException.class, () -> config.setMaxHandSize(-1));
     }
 
     @Test
-    public void when_setBleedingDamageLessThan0_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setBleedingDamageAmount(-1);
-        });
+    void when_setBleedingDamageLessThan0_throw_invalidConfigurationException() {
+        Config config = new Config();
+        assertThrows(InvalidConfigurationException.class, () -> config.setBleedingDamageAmount(-1));
     }
 
     @Test
-    public void when_setInitialManaCapacityLessThan0_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setInitialManaCapacity(-1);
-        });
+    void when_setInitialManaCapacityLessThan0_throw_invalidConfigurationException() {
+        Config config = new Config();
+        assertThrows(InvalidConfigurationException.class, () -> config.setInitialManaCapacity(-1));
     }
 
     @Test
-    public void when_setMaxManaCapacityLessThan1_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setMaxManaCapacity(0);
-        });
+    void when_setMaxManaCapacityLessThan1_throw_invalidConfigurationException() {
+        Config config = new Config();
+        assertThrows(InvalidConfigurationException.class, () -> config.setMaxManaCapacity(0));
     }
 
     @Test
-    public void when_setMaxManaCapacityLessThanInitialManaCapacity_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setInitialManaCapacity(11);
-        });
+    void when_setMaxManaCapacityLessThanInitialManaCapacity_throw_invalidConfigurationException() {
+        Config config = new Config();
+        assertThrows(InvalidConfigurationException.class, () -> config.setInitialManaCapacity(11));
 
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            config.setInitialManaCapacity(2);
-            config.setMaxManaCapacity(1);
-        });
+        config.setInitialManaCapacity(2);
+        assertThrows(InvalidConfigurationException.class, () -> config.setMaxManaCapacity(1));
     }
 
     @Test
-    public void when_setPlayers2NonUnique_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            Set<Player> players = new HashSet<>();
-            players.add(new Player("Berk"));
-            players.add(new Player("Berk"));
-            config.setPlayers(players);
-        });
+    void when_setPlayers2NonUnique_throw_invalidConfigurationException() {
+        Config config = new Config();
+        Set<Player> players = new HashSet<>();
+        players.add(new Player("Berk"));
+        players.add(new Player("Berk"));
+        assertThrows(InvalidConfigurationException.class, () -> config.setPlayers(players));
     }
 
     @Test
-    public void when_setPlayers1_throw_invalidConfigurationException() {
-        assertThrows(InvalidConfigurationException.class, () -> {
-            Config config = new Config();
-            Set<Player> players = new HashSet<>();
-            players.add(new Player("Berk"));
-            config.setPlayers(players);
-        });
+    void when_setPlayers1_throw_invalidConfigurationException() {
+        Config config = new Config();
+        Set<Player> players = new HashSet<>();
+        players.add(new Player("Berk"));
+        assertThrows(InvalidConfigurationException.class, () -> config.setPlayers(players));
     }
 
     @Test
-    public void when_setAll_expect_successful() {
+    void when_setAll_expect_successful() {
         Config config = new Config();
 
         Set<Player> players = new HashSet<>();
@@ -172,7 +139,7 @@ public class ConfigTests {
     }
 
     @Test
-    public void when_toString_expect_correct() {
+    void when_toString_expect_correct() {
         Config config = new Config();
         String expectedString = "Players: " + config.getPlayers().stream().map(Player::getName)
                 .collect(Collectors.joining(", ")) + System.lineSeparator() +

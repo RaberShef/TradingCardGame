@@ -17,6 +17,11 @@ import java.util.*;
 public class UserInterface {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    public static final String INTEGER_PROMPT = "Please enter an integer: ";
+    public static final String POSITIVE_INTEGER_PROMPT = "Please enter a positive integer: ";
+
+    private UserInterface() {
+    }
 
     public static void mainMenu(String configPath, InputStream in, PrintStream out, PrintStream err) {
         Scanner scanner = new Scanner(in);
@@ -124,7 +129,7 @@ public class UserInterface {
                 }
                 objectMapper.writeValue(new File(configPath), config);
             } catch (NumberFormatException e) {
-                err.println("Please enter a valid integer");
+                err.println(INTEGER_PROMPT);
             } catch (TcgException e) {
                 err.println(e.getMessage());
             } catch (IOException e) {
@@ -157,37 +162,37 @@ public class UserInterface {
     }
 
     private static void setInitialHealth(Scanner scanner, PrintStream out, Config config) {
-        out.println("Please enter a positive integer: ");
+        out.println(POSITIVE_INTEGER_PROMPT);
         String input = scanner.nextLine();
         config.setInitialHealth(Integer.parseInt(input));
     }
 
     private static void setInitialManaCapacity(Scanner scanner, PrintStream out, Config config) {
-        out.println("Please enter an integer: ");
+        out.println(INTEGER_PROMPT);
         String input = scanner.nextLine();
         config.setInitialManaCapacity(Integer.parseInt(input));
     }
 
     private static void setInitialHandSize(Scanner scanner, PrintStream out, Config config) {
-        out.println("Please enter an integer less than deck size: ");
+        out.println("Please enter an integer that is less than the deck size: ");
         String input = scanner.nextLine();
         config.setInitialHandSize(Integer.parseInt(input));
     }
 
     private static void setMaxManaCapacity(Scanner scanner, PrintStream out, Config config) {
-        out.println("Please enter a positive integer: ");
+        out.println(POSITIVE_INTEGER_PROMPT);
         String input = scanner.nextLine();
         config.setMaxManaCapacity(Integer.parseInt(input));
     }
 
     private static void setMaxHandSize(Scanner scanner, PrintStream out, Config config) {
-        out.println("Please enter a positive integer: ");
+        out.println(POSITIVE_INTEGER_PROMPT);
         String input = scanner.nextLine();
         config.setMaxHandSize(Integer.parseInt(input));
     }
 
     private static void setBleedingDamageAmount(Scanner scanner, PrintStream out, Config config) {
-        out.println("Please enter an integer: ");
+        out.println(INTEGER_PROMPT);
         String input = scanner.nextLine();
         config.setBleedingDamageAmount(Integer.parseInt(input));
     }
