@@ -19,7 +19,7 @@ class CardTests {
     }
 
     @Test
-    void when_hashCode_expect_hashOfName() {
+    void when_hashCode_expect_hashOfCost() {
         Card card = new Card(3);
         assertEquals(Objects.hash(card.getCost()), card.hashCode());
     }
